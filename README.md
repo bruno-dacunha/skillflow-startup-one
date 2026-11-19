@@ -4,7 +4,7 @@
 
 🌐 **Acesse o protótipo rodando ao vivo:** [Clique aqui para abrir](https://bruno-dacunha.github.io/skillflow-startup-one/)
 
----
+
 
 ## 🎯 O Desafio de Negócio (O Problema)
 
@@ -14,7 +14,7 @@ Empresas médias e grandes investem alto em plataformas de e-learning tradiciona
 - 💸 **Falta de comprovação de ROI:** Orçamento de T&D alocado sem dados objetivos sobre onde os times realmente travam.
 - ⚠️ **Miopia na gestão de competências:** Dúvidas diárias feitas às IAs corporativas desperdiçadas como "ativos ociosos", sem gerar inteligência para capacitação.
 
----
+
 
 ## 💡 A Solução e Arquitetura do Produto
 
@@ -30,7 +30,7 @@ O **SkillFlow** foi estruturado em duas camadas complementares para gerar valor 
 - 🔄 **Reaproveitamento de Contratos:** Cruzamento automático dos *gaps* críticos com os catálogos de plataformas que a empresa já paga (Alura Empresas, Udemy Business, LinkedIn Learning).
 - 📊 **Comprovação de ROI (Prova):** Calculadora transparente de retorno financeiro (horas recuperadas + licenças evitadas) combinada ao acompanhamento da queda real do *gap* após a ativação das pílulas.
 
----
+
 
 ## 🖥️ UX e Interface
 
@@ -46,7 +46,7 @@ A interface foi projetada com foco em clareza analítica, narrativa executiva (*
 | :---: |
 | ![Confiança](assets/05-confianca.png) |
 
----
+
 
 ## 🔒 Privacidade e Governança (LGPD by Design)
 
@@ -56,7 +56,7 @@ Para viabilizar a adoção corporativa e atender às exigências de TI, Seguran�
 - 🏷️ **Classificação temática:** Conversão da dúvida em tema/subtema via PLN, com descarte do texto original.
 - 👥 **Agregação mínima (k-anonimato):** Exibição no painel gerencial apenas para grupos com **10 ou mais colaboradores**, garantindo que o RH visualize tendências da área e nunca perguntas individuais.
 
----
+
 
 ## 🛠️ Tecnologias Utilizadas
 
