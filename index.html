@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SkillFlow — Protótipo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #F1F4F2;
+      --surface: #ffffff;
+      --text: #14262C;
+      --muted: #5B6E73;
+      --line: #DCE3E0;
+      --accent: #0B7A75;
+      --accent-ink: #ffffff;
+      --accent-soft: #E1F1EF;
+      --hot: #C8412B;
+      --cell0: #E8EEEB;
+      --rail: #0F2A33;
+      --rail-text: #B9CBCD;
+      --rail-line: #24424B;
+      --display: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
+      --body: 'Instrument Sans', 'Segoe UI', system-ui, sans-serif;
+      color-scheme: light;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --paper: #0C1A1F;
+        --surface: #13262C;
+        --text: #E6EFEE;
+        --muted: #8FA6AA;
+        --line: #25393F;
+        --accent: #3CC2B7;
+        --accent-ink: #06201F;
+        --accent-soft: #16363A;
+        --hot: #E0624A;
+        --cell0: #1B3138;
+        --rail: #091418;
+        --rail-line: #1C333A;
+        color-scheme: dark;
+      }
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--paper);
+      color: var(--text);
+      font: 400 15px/1.5 var(--body);
+      display: grid;
+      grid-template-columns: 248px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    button { font: inherit; color: inherit; cursor: pointer; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    svg.i { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+    /* Navegação lateral */
+    .rail {
+      background: var(--rail);
+      color: var(--rail-text);
+      padding: 26px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+    .brand { display: flex; gap: 11px; align-items: center; padding: 0 8px 22px; }
+    .brand b { font: 700 20px/1 var(--display); color: #fff; letter-spacing: -.2px; display: block; }
+    .brand small { font-size: 12px; display: block; margin-top: 4px; color: var(--rail-text); }
+    .nav {
+      display: flex; gap: 11px; align-items: center; width: 100%; text-align: left;
+      background: none; border: 0; border-radius: 6px; padding: 10px;
+      color: var(--rail-text); font-weight: 500; font-size: 14.5px;
+    }
+    .nav:hover { background: var(--rail-line); color: #fff; }
+    .nav[aria-current=page] { background: #E9F4F2; color: #0F2A33; }
+    .rail-note {
+      margin-top: auto; display: flex; gap: 10px; font-size: 12.5px; line-height: 1.45;
+      padding: 14px 10px 0; border-top: 1px solid var(--rail-line);
+    }
+
+    /* Área principal */
+    main { padding: 40px clamp(20px, 4vw, 56px) 64px; max-width: 1240px; width: 100%; }
+    .view { display: none; }
+    .view.on { display: block; }
+    h1 { font: 700 clamp(28px, 3.4vw, 40px)/1.08 var(--display); letter-spacing: -.8px; max-width: 20ch; }
+    h2 { font: 700 21px/1.2 var(--display); letter-spacing: -.3px; }
+    h3 { font: 600 14px/1.3 var(--body); margin: 26px 0 10px; }
+    .lede { color: var(--muted); margin-top: 10px; max-width: 62ch; }
+    .head { display: flex; justify-content: space-between; gap: 24px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 32px; }
+    .privacy { display: inline-flex; gap: 8px; align-items: center; font-size: 13px; color: var(--accent); font-weight: 500; }
+    .note { font-size: 12.5px; color: var(--muted); max-width: 64ch; margin-top: 14px; }
+    .fine { font-size: 12.5px; color: var(--muted); margin-top: 16px; }
+    .big { font: 700 clamp(40px, 6vw, 64px)/1 var(--display); letter-spacing: -2px; }
+
+    /* Botões */
+    .btn {
+      display: inline-flex; gap: 8px; align-items: center; justify-content: center;
+      border-radius: 6px; border: 1px solid transparent; padding: 10px 16px; font-weight: 600; font-size: 14px;
+    }
+    .btn.p { background: var(--accent); color: var(--accent-ink); width: 100%; }
+    .btn.p:hover { filter: brightness(1.08); }
+    .btn.p[data-on=true] { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+    .btn.o { background: none; border-color: var(--line); }
+    .btn.o:hover { border-color: var(--text); }
+    .btn.o[data-on=true] { border-color: var(--accent); color: var(--accent); }
+
+    /* Diagnóstico e Matriz de Calor */
+    .split { display: grid; grid-template-columns: minmax(0, 1fr) 350px; gap: 44px; align-items: start; }
+    .hm-wrap { overflow-x: auto; padding: 6px 6px 10px; margin: -6px; }
+    .hm { display: grid; grid-template-columns: 170px repeat(4, minmax(92px, 1fr)); gap: 5px; min-width: 640px; }
+    .col { font-size: 12.5px; line-height: 1.3; color: var(--muted); padding: 0 2px 8px; align-self: end; }
+    .rowh { align-self: center; padding-right: 10px; line-height: 1.3; }
+    .rowh b { font-weight: 600; display: block; font-size: 14px; }
+    .rowh span { font-size: 12.5px; color: var(--muted); }
+    .cell {
+      height: 62px; border: 0; border-radius: 5px; font: 700 19px var(--display); position: relative; color: var(--text);
+      background: color-mix(in srgb, var(--hot) var(--p), var(--cell0)); transition: outline-offset .12s;
+    }
+    .cell.hi { color: #fff; }
+    .cell small { display: block; font: 500 11.5px/1.2 var(--body); margin-top: 2px; opacity: .9; }
+    .cell[aria-pressed=true] { outline: 2.5px solid var(--text); outline-offset: 2px; }
+    .cell.act::after {
+      content: ""; position: absolute; top: 6px; right: 6px; width: 9px; height: 9px;
+      border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--surface);
+    }
+    .legend { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; margin-top: 18px; font-size: 12.5px; color: var(--muted); }
+    .ramp { display: flex; align-items: center; gap: 8px; }
+    .ramp i { width: 120px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--cell0), var(--hot)); }
+    .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+    .emerg { margin-top: 28px; border-top: 1px solid var(--line); }
+    .emerg div { display: flex; justify-content: space-between; gap: 16px; padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+    .emerg b { font-variant-numeric: tabular-nums; color: var(--hot); white-space: nowrap; }
+
+    /* Painel lateral de detalhe */
+    .detail { border-left: 1px solid var(--line); padding-left: 32px; min-height: 420px; }
+    .sub { color: var(--muted); font-size: 14px; margin-top: 6px; }
+    .q { margin-bottom: 13px; font-size: 14px; }
+    .q div { display: flex; justify-content: space-between; gap: 14px; margin-bottom: 5px; }
+    .q b { font-weight: 600; font-variant-numeric: tabular-nums; }
+    .bar { height: 4px; background: var(--line); border-radius: 2px; }
+    .bar i { display: block; height: 100%; background: var(--text); border-radius: 2px; }
+    .pills { list-style: none; border-top: 1px solid var(--line); }
+    .pills li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+    .pills span { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .cmp { font-size: 13.5px; color: var(--muted); margin: 12px 0 18px; }
+
+    /* Ação */
+    .sum { display: flex; gap: 28px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 28px; }
+    .sum p { max-width: 44ch; color: var(--muted); }
+    .cov { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) 220px; gap: 32px; align-items: center; padding: 22px 0; border-bottom: 1px solid var(--line); }
+    .cov:first-of-type { border-top: 1px solid var(--line); }
+    .cov h2 { font-size: 17px; }
+    .cov p { font-size: 13.5px; color: var(--muted); margin-top: 3px; }
+    .seg { display: flex; gap: 3px; margin-bottom: 8px; }
+    .seg i { flex: 1; height: 8px; border-radius: 2px; background: var(--line); }
+    .seg i.f { background: var(--accent); }
+
+    /* Prova (ROI) */
+    .roi { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 56px; align-items: start; }
+    .calc { width: 100%; border-collapse: collapse; font-size: 14.5px; margin-top: 20px; }
+    .calc td { padding: 11px 0; border-bottom: 1px solid var(--line); }
+    .calc td:last-child { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .calc small { display: block; color: var(--muted); font-size: 12.5px; }
+    .calc .t td { font-weight: 700; font-size: 16px; }
+    .inp { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 22px; }
+    .inp label { font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 5px; }
+    .inp input { width: 120px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); font: inherit; }
+    svg.chart { width: 100%; height: auto; margin-top: 12px; }
+    .chart text { fill: var(--muted); font: 12px var(--body); }
+    .ba { display: flex; gap: 36px; flex-wrap: wrap; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); }
+    .ba b { font: 700 26px var(--display); display: block; }
+    .ba span { font-size: 13px; color: var(--muted); }
+
+    /* Experiência do colaborador */
+    .ws { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+    .chat { padding: 26px; display: flex; flex-direction: column; gap: 14px; background: var(--paper); }
+    .chat .who { font-size: 13px; color: var(--muted); font-weight: 600; }
+    .msg { padding: 12px 16px; border-radius: 12px; font-size: 14.5px; max-width: 90%; }
+    .u { background: var(--text); color: var(--paper); align-self: flex-end; border-bottom-right-radius: 3px; }
+    .a { background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 3px; }
+    code { display: block; margin-top: 10px; background: var(--paper); padding: 10px 12px; border-radius: 5px; font: 12.5px/1.5 ui-monospace, Consolas, monospace; overflow-x: auto; }
+    .side { padding: 26px; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 14px; }
+    .side .top { display: flex; justify-content: space-between; align-items: baseline; }
+    .side .top b { font: 700 16px var(--display); color: var(--accent); }
+    .side .top span { font-size: 13px; color: var(--muted); }
+    .side h2 { font-size: 19px; }
+    .side p { font-size: 14px; color: var(--muted); }
+    .sw { width: 42px; height: 24px; border-radius: 12px; border: 0; background: var(--line); position: relative; flex: none; }
+    .sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: .15s; }
+    .sw[aria-checked=true] { background: var(--accent); }
+    .sw[aria-checked=true]::after { left: 21px; }
+    .swr { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; padding-top: 14px; border-top: 1px solid var(--line); }
+
+    /* Confiança e LGPD */
+    .flow { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 2px solid var(--text); margin-bottom: 44px; }
+    .flow div { padding: 16px 22px 0 0; }
+    .flow h3 { margin: 0 0 6px; font-size: 15px; }
+    .flow p { font-size: 13.5px; color: var(--muted); }
+    .gov { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; }
+    .set { border-top: 1px solid var(--line); margin-top: 14px; }
+    .set div.r { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--line); }
+    .set b { font-weight: 600; font-size: 14.5px; display: block; }
+    .set small { font-size: 13px; color: var(--muted); }
+    .st { font-size: 13px; font-weight: 600; color: var(--accent); white-space: nowrap; display: inline-flex; gap: 6px; align-items: center; }
+    .ul { list-style: none; border-top: 1px solid var(--line); margin-top: 12px; }
+    .ul li { padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+
+    #toast {
+      position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 16px);
+      background: var(--text); color: var(--paper); padding: 11px 18px;
+      border-radius: 8px; font-size: 14px; opacity: 0; pointer-events: none; transition: .2s; z-index: 9;
+    }
+    #toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+    @media (max-width: 1060px) {
+      .split { grid-template-columns: 1fr; }
+      .detail { border-left: 0; border-top: 1px solid var(--line); padding: 28px 0 0; min-height: 0; }
+    }
+    @media (max-width: 860px) {
+      body { grid-template-columns: 1fr; }
+      .rail { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; padding: 14px 16px; gap: 4px; }
+      .brand { padding: 0 12px 0 0; }
+      .brand small, .rail-note { display: none; }
+      .nav { width: auto; padding: 8px 10px; font-size: 13.5px; }
+      .ws, .gov, .cov, .roi, .flow { grid-template-columns: 1fr; gap: 20px; }
+      .side { border-left: 0; border-top: 1px solid var(--line); }
+      .gov { gap: 36px; }
+      .flow div { padding-bottom: 8px; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+      <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+      <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 5l12 7-12 7z"/></symbol>
+      <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></symbol>
+      <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15l4-5 3 3 4-6"/></symbol>
+    </defs>
+  </svg>
+
+  <aside class="rail">
+    <div class="brand">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="#E9F4F2"/><path d="M7 22c4 0 5-10 10-10s5 10 10 10" fill="none" stroke="#0B7A75" stroke-width="3" stroke-linecap="round"/></svg>
+      <div><b>SkillFlow</b><small>People analytics e microlearning</small></div>
+    </div>
+    <button class="nav" data-go="diag" aria-current="page"><svg class="i"><use href="#i-grid"/></svg>Diagnóstico</button>
+    <button class="nav" data-go="acao"><svg class="i"><use href="#i-bolt"/></svg>Ação</button>
+    <button class="nav" data-go="prova"><svg class="i"><use href="#i-chart"/></svg>Prova</button>
+    <button class="nav" data-go="colab"><svg class="i"><use href="#i-user"/></svg>Experiência do colaborador</button>
+    <button class="nav" data-go="conf"><svg class="i"><use href="#i-shield"/></svg>Confiança</button>
+    <div class="rail-note"><svg class="i"><use href="#i-lock"/></svg><span>Protótipo com dados simulados. Em produção, só dados agregados chegam à liderança.</span></div>
+  </aside>
+
+  <main>
+    <!-- 1. Diagnóstico -->
+    <section id="diag" class="view on">
+      <div class="head">
+        <div>
+          <h1>Onde as equipes estão travando</h1>
+          <p class="lede">14.820 interações anônimas nos últimos 30 dias. Três áreas pedem ação e um tema está subindo rápido em Operações.</p>
+        </div>
+        <span class="privacy"><svg class="i"><use href="#i-lock"/></svg>Visão agregada, mínimo de 10 pessoas por grupo</span>
+      </div>
+      <div class="split">
+        <div>
+          <div class="hm-wrap"><div class="hm" id="hm" role="group" aria-label="Matriz de gaps por área e competência"></div></div>
+          <div class="legend">
+            <span class="ramp">Poucas pessoas<i></i>Muitas com dúvidas recorrentes</span>
+            <span><span class="dot"></span>Pílulas ativas</span>
+            <span>Variação em pontos contra os 30 dias anteriores</span>
+          </div>
+          <div class="emerg" id="emerg"></div>
+          <p class="note">Como lemos o número: a porcentagem conta as pessoas da área com 3 ou mais perguntas sobre o mesmo subtema no período. Assim, quem só usa muito a IA não vira lacuna.</p>
+        </div>
+        <aside class="detail" id="detail" aria-live="polite"></aside>
+      </div>
+    </section>
+
+    <!-- 2. Ação -->
+    <section id="acao" class="view">
+      <div class="head">
+        <div>
+          <h1>O que você já paga resolve quase tudo</h1>
+          <p class="lede">Cruzamos as dúvidas dos três maiores gaps com os conteúdos das plataformas contratadas. Só o que não tem pílula precisa de compra nova.</p>
+        </div>
+      </div>
+      <div class="sum"><span class="big" id="covBig"></span><p id="covTxt"></p></div>
+      <div id="cov"></div>
+    </section>
+
+    <!-- 3. Prova -->
+    <section id="prova" class="view">
+      <div class="head">
+        <div>
+          <h1>O que o SkillFlow devolveu em outubro</h1>
+          <p class="lede">Retorno estimado com as premissas à vista. Ajuste os valores para a realidade da empresa e o resultado muda na hora.</p>
+        </div>
+      </div>
+      <div class="roi">
+        <div>
+          <span class="big" id="roiBig"></span>
+          <table class="calc" id="calc"></table>
+          <div class="inp">
+            <label>Custo médio da hora (R$)<input id="inH" type="number" min="0" step="1" value="48"></label>
+            <label>Horas poupadas por conclusão<input id="inC" type="number" min="0" step="0.1" value="1.5"></label>
+          </div>
+          <p class="note">Conclusão de 78% das pílulas, contra 19% em cursos longos, mede engajamento e não aprendizado. Por isso a prova está ao lado: o gap caiu depois da pílula?</p>
+        </div>
+        <div>
+          <h2>Comercial e CS: conceitos financeiros</h2>
+          <p class="sub">Pessoas com dúvidas recorrentes no tema, por semana.</p>
+          <svg class="chart" id="chart" viewBox="0 0 520 230" role="img" aria-label="Queda de 52% para 31% depois da ativação das pílulas na semana 4"></svg>
+          <div class="ba">
+            <div><b>52% para 31%</b><span>gap em 10 semanas</span></div>
+            <div><b>18% para 9%</b><span>propostas com margem corrigida pelo Financeiro, dado do BI da empresa</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Experiência do colaborador -->
+    <section id="colab" class="view">
+      <div class="head">
+        <div>
+          <h1>A pílula aparece enquanto a pessoa trabalha</h1>
+          <p class="lede">O colaborador segue na IA da empresa. O SkillFlow sugere um vídeo curto ao lado, só para ele, e ele decide se quer receber.</p>
+        </div>
+      </div>
+      <div class="ws">
+        <div class="chat">
+          <div class="who">Microsoft 365 Copilot</div>
+          <div class="msg u">Como faço uma medida DAX para comparar a receita acumulada do ano (YTD) com o mesmo período do ano passado sem quebrar o filtro de mês?</div>
+          <div class="msg a">
+            Combine <b>TOTALYTD</b> e <b>SAMEPERIODLASTYEAR</b> dentro de um <b>CALCULATE</b>:
+            <code>Receita YTD LY = CALCULATE(TOTALYTD([Receita], dCalendario[Data]), SAMEPERIODLASTYEAR(dCalendario[Data]))</code>
+          </div>
+        </div>
+        <div class="side">
+          <div id="pillBox" style="display:flex;flex-direction:column;gap:14px">
+            <div class="top"><b>Pílula sugerida</b><span>4 min</span></div>
+            <h2>CALCULATE e inteligência de tempo em 4 minutos</h2>
+            <p>Power BI, via Alura. Você está montando um comparativo anual em DAX. Este vídeo mostra o caminho com uma tabela calendário.</p>
+            <button class="btn p" id="watch"><svg class="i"><use href="#i-play"/></svg>Assistir pílula</button>
+          </div>
+          <p id="pillOff" style="display:none">Pílulas desligadas. Suas perguntas à IA continuam normais e nada é sugerido. Você pode religar quando quiser.</p>
+          <div style="margin-top:auto">
+            <div class="swr"><span>Pílulas no meu fluxo</span><button class="sw" id="sw" role="switch" aria-checked="true" aria-label="Pílulas no meu fluxo"></button></div>
+            <p class="fine">O SkillFlow lê só o tema da dúvida. Seu gestor nunca vê a pergunta nem seu histórico.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Confiança -->
+    <section id="conf" class="view">
+      <div class="head">
+        <div>
+          <h1>O caminho do dado, da pergunta ao painel</h1>
+          <p class="lede">A liderança só enxerga temas de grupos com 10 pessoas ou mais. É assim que o dado chega lá.</p>
+        </div>
+      </div>
+      <div class="flow">
+        <div><h3>Na IA da empresa</h3><p>A conversa continua no Copilot, ChatGPT ou Gemini, sob as regras de segurança que a empresa já tem.</p></div>
+        <div><h3>Limpeza</h3><p>Nomes, e-mails, IDs, CPFs e senhas são removidos antes de qualquer análise.</p></div>
+        <div><h3>Classificação</h3><p>Cada dúvida vira um tema e um subtema. O texto original é descartado.</p></div>
+        <div><h3>Agregação</h3><p>Só grupos com 10 pessoas ou mais chegam ao painel do RH.</p></div>
+      </div>
+      <div class="gov">
+        <div>
+          <h2>O RH vê</h2>
+          <ul class="ul">
+            <li>Temas e subtemas por área, em porcentagem</li>
+            <li>Variação mês a mês e pílulas ativas</li>
+            <li>Conclusão de pílulas, em total por área</li>
+          </ul>
+          <h2 style="margin-top:32px">O RH nunca vê</h2>
+          <ul class="ul">
+            <li>Perguntas ou respostas de qualquer pessoa</li>
+            <li>Quem assistiu ou deixou de assistir a uma pílula</li>
+            <li>Dados de grupos com menos de 10 pessoas</li>
+          </ul>
+        </div>
+        <div>
+          <h2>IAs corporativas conectadas</h2>
+          <div class="set">
+            <div class="r"><div><b>Microsoft 365 Copilot</b><small>Via Microsoft Purview Audit API</small></div><span class="st"><svg class="i"><use href="#i-check"/></svg>Conectado</span></div>
+            <div class="r"><div><b>ChatGPT Enterprise</b><small>Compliance API, somente metadados de tema</small></div><span class="st"><svg class="i"><use href="#i-check"/></svg>Conectado</span></div>
+            <div class="r"><div><b>Google Gemini Workspace</b><small>Ativação pelo Admin Console</small></div><button class="btn o" id="gem">Conectar</button></div>
+          </div>
+          <p class="note"><b>A validar com cada fornecedor:</b> quais metadados as APIs oficiais realmente entregam. O protótipo supõe que o tema da dúvida pode ser extraído sem expor o conteúdo.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" role="status"></div>
+
+  <script>
+    const depts = [['Financeiro', 38], ['Operações e Logística', 52], ['Comercial e CS', 44], ['Tecnologia e Produto', 29]];
+    const skills = ['Análise de dados e DAX', 'Automação de rotinas', 'Engenharia de prompt', 'Conceitos financeiros'];
+    const vals = [[64, 38, 12, 9], [41, 59, 34, 15], [18, 21, 55, 31], [11, 14, 8, 36]];
+    const dlt = [[6, 3, -1, 0], [2, 14, 4, -2], [-1, 1, 11, -14], [0, -1, -2, 5]];
+    const info = {
+      '0-0': { q: [['Medidas DAX com inteligência de tempo (YTD e YoY)', 42], ['Erros em relacionamentos no Power BI', 29], ['Consolidação de DRE com Power Query', 19], ['Desempenho em painéis pesados', 10]], p: [['CALCULATE e inteligência de tempo', 5], ['Corrigindo relacionamentos 1:N', 4], ['Power Query para DRE mensal', 5]], c: 'um curso de 24 horas', src: 'Alura Empresas', tot: 4, cov: 3, miss: 'Desempenho em painéis pesados' },
+      '1-1': { q: [['Alertas automáticos de estoque e SLA', 46], ['Fluxos que falham sem avisar', 27], ['Aprovações em cadeia', 17], ['Conexão entre planilhas e ERP', 10]], p: [['Alertas de estoque com Power Automate', 6], ['Tratando falhas em fluxos', 4], ['Aprovações em cadeia', 5]], c: 'um curso de 16 horas', src: 'Udemy Business', tot: 4, cov: 3, miss: 'Conexão entre planilhas e ERP' },
+      '2-2': { q: [['Simular objeções de clientes', 38], ['Resumir o histórico de uma conta', 31], ['Pedir tom e formato certos', 21], ['Conferir a resposta antes de enviar', 10]], p: [['Prompts para negociação B2B', 4], ['Resumos de conta em 3 passos', 3], ['Revisando respostas da IA', 4]], c: 'um curso de 8 horas', src: 'LinkedIn Learning', tot: 4, cov: 4, miss: null },
+      '2-3': { q: [['Margem e markup em propostas', 41], ['Leitura do DRE do cliente', 27], ['Prazo e condições de pagamento', 20], ['Reajuste de contratos', 12]], p: [['Margem sem erro em propostas', 4], ['Lendo o DRE do cliente', 5], ['Condições de pagamento', 3]], c: 'um curso de 12 horas' }
+    };
+
+    const active = new Set(['2-3']);
+    let sel = '0-0';
+    const $ = s => document.querySelector(s);
+    const fmt = n => n.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
+    const sg = n => n > 0 ? '+' + n : n < 0 ? '−' + Math.abs(n) : '';
+    const short = a => a === 'Operações e Logística' ? 'Operações' : a === 'Comercial e CS' ? 'Comercial' : a;
+    const toast = m => {
+      const t = $('#toast');
+      t.textContent = m;
+      t.classList.add('on');
+      clearTimeout(toast.h);
+      toast.h = setTimeout(() => t.classList.remove('on'), 2600);
+    };
+
+    function go(id) {
+      document.querySelectorAll('.nav').forEach(n => n.dataset.go === id ? n.setAttribute('aria-current', 'page') : n.removeAttribute('aria-current'));
+      document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === id));
+      window.scrollTo(0, 0);
+    }
+    document.querySelectorAll('.nav').forEach(b => b.onclick = () => go(b.dataset.go));
+
+    function renderHM() {
+      let h = '<div></div>' + skills.map(s => `<div class="col">${s}</div>`).join('');
+      depts.forEach((d, r) => {
+        h += `<div class="rowh"><b>${d[0]}</b><span>${d[1]} pessoas</span></div>`;
+        vals[r].forEach((v, c) => {
+          const k = r + '-' + c, x = dlt[r][c], p = Math.min(100, Math.round(v * 1.2)), t = x ? sg(x) + ' pts' : 'estável';
+          h += `<button class="cell${v >= 45 ? ' hi' : ''}${active.has(k) ? ' act' : ''}" style="--p:${p}%" data-k="${k}" aria-pressed="${k === sel}" aria-label="${d[0]}, ${skills[c]}: ${v}%, ${t}">${v}%<small>${t}</small></button>`;
+        });
+      });
+      $('#hm').innerHTML = h;
+      const rows = [];
+      dlt.forEach((r, i) => r.forEach((x, j) => { if (x >= 10) rows.push([x, i, j]); }));
+      rows.sort((a, b) => b[0] - a[0]);
+      $('#emerg').innerHTML = '<h3 style="margin-top:0;padding-top:16px">Subindo mais rápido</h3>' + rows.map(([x, i, j]) => `<div><span>${skills[j]} em ${depts[i][0]}</span><b>${sg(x)} pts em 30 dias</b></div>`).join('');
+    }
+
+    function toggle(k) {
+      const on = active.has(k);
+      on ? active.delete(k) : active.add(k);
+      toast(on ? 'Pílulas desativadas' : 'Pílulas ativadas');
+      renderAll();
+    }
+
+    function renderDetail() {
+      const [r, c] = sel.split('-').map(Number), v = vals[r][c], d = depts[r], i = info[sel], x = dlt[r][c];
+      const lead = `<h2>${skills[c]}, ${d[0]}</h2><p class="sub">${v}% das ${d[1]} pessoas, ${x ? sg(x) + ' pts em 30 dias' : 'sem variação em 30 dias'}.</p>`;
+      if (!i) {
+        $('#detail').innerHTML = lead + `<h3>${v >= 30 ? 'Em observação' : 'Sem ação necessária'}</h3><p class="sub">${v >= 30 ? 'Ainda não há um subtema recorrente forte o bastante para recomendar pílulas.' : 'Este tema está abaixo do ponto em que vale ativar treinamento.'} Escolha uma célula mais escura para ver as dúvidas e a ação sugerida.</p>`;
+        return;
+      }
+      const on = active.has(sel), tot = i.p.reduce((a, b) => a + b[1], 0);
+      $('#detail').innerHTML = lead + `<h3>Dúvidas mais frequentes</h3>` +
+        i.q.map(y => `<div class="q"><div><span>${y[0]}</span><b>${y[1]}%</b></div><div class="bar"><i style="width:${y[1]}%"></i></div></div>`).join('') +
+        `<h3>Ação sugerida</h3><ul class="pills">${i.p.map(y => `<li>${y[0]}<span>${y[1]} min</span></li>`).join('')}</ul>
+        <p class="cmp">${tot} minutos no fluxo de trabalho, no lugar de ${i.c}.</p>
+        <button class="btn p" id="act" data-on="${on}">${on ? '<svg class="i"><use href="#i-check"/></svg>Pílulas ativas, desativar' : 'Ativar 3 pílulas em ' + short(d[0])}</button>
+        ${sel === '2-3' ? '<button class="btn o" id="see" style="width:100%;margin-top:10px">Ver o resultado em Prova</button>' : ''}
+        <p class="fine">Temas agrupados por PLN. Nenhuma pergunta individual aparece aqui.</p>`;
+      $('#act').onclick = () => { toggle(sel); $('#act').focus(); };
+      if ($('#see')) $('#see').onclick = () => go('prova');
+    }
+
+    function renderCov() {
+      const g = ['0-0', '1-1', '2-2'], tot = g.reduce((a, k) => a + info[k].tot, 0), cv = g.reduce((a, k) => a + info[k].cov, 0);
+      $('#covBig').textContent = Math.round(cv / tot * 100) + '%';
+      $('#covTxt').textContent = `${cv} das ${tot} dúvidas dos gaps críticos já têm pílula nos contratos atuais. Compra nova só para ${tot - cv} delas.`;
+      $('#cov').innerHTML = g.map(k => {
+        const [r, c] = k.split('-').map(Number), i = info[k], on = active.has(k);
+        return `<div class="cov"><div><h2>${skills[c]}</h2><p>${depts[r][0]}, ${vals[r][c]}% das pessoas</p></div>
+        <div><div class="seg">${Array.from({ length: i.tot }, (_, n) => `<i class="${n < i.cov ? 'f' : ''}"></i>`).join('')}</div><p>${i.cov} de ${i.tot} dúvidas cobertas por ${i.src}. ${i.miss ? 'Sem pílula: ' + i.miss.toLowerCase() + '.' : 'Cobertura completa.'}</p></div>
+        <button class="btn ${on ? 'o' : 'p'}" data-k="${k}" data-on="${on}">${on ? 'Pílulas ativas, desativar' : 'Ativar pílulas em ' + short(depts[r][0])}</button></div>`;
+      }).join('');
+    }
+
+    $('#cov').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (b) toggle(b.dataset.k); });
+    $('#hm').addEventListener('click', e => { const b = e.target.closest('.cell'); if (!b) return; sel = b.dataset.k; renderAll(); $(`[data-k="${sel}"]`).focus(); });
+    function renderAll() { renderHM(); renderDetail(); renderCov(); }
+
+    function renderROI() {
+      const h = +$('#inH').value || 0, c = +$('#inC').value || 0, conc = 840, lic = 42500, cost = 30300, hrs = conc * c, b1 = hrs * h, tot = b1 + lic;
+      $('#roiBig').textContent = (tot / cost).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'x';
+      $('#calc').innerHTML = `
+        <tr><td>Horas recuperadas<small>${conc} conclusões × ${c.toLocaleString('pt-BR')} h = ${fmt(hrs)} h</small></td><td>R$ ${fmt(b1)}</td></tr>
+        <tr><td>Licenças que não precisaram ser compradas<small>Conteúdo que a empresa já contrata</small></td><td>R$ ${fmt(lic)}</td></tr>
+        <tr><td>Benefício total</td><td>R$ ${fmt(tot)}</td></tr>
+        <tr><td>Custo do SkillFlow no mês</td><td>R$ ${fmt(cost)}</td></tr>
+        <tr class="t"><td>Retorno</td><td>${$('#roiBig').textContent}</td></tr>`;
+    }
+    ['#inH', '#inC'].forEach(s => $(s).oninput = renderROI);
+
+    (function renderChart() {
+      const d = [52, 51, 50, 47, 42, 38, 35, 33, 32, 31], x = i => 42 + i * 458 / 9, y = v => 190 - v / 60 * 166;
+      let s = [0, 20, 40, 60].map(v => `<line x1="42" x2="500" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="34" y="${y(v) + 4}" text-anchor="end">${v}%</text>`).join('');
+      s += `<line x1="${x(3)}" x2="${x(3)}" y1="24" y2="190" stroke="var(--accent)" stroke-dasharray="4 4"/><text x="${x(3) + 6}" y="34" style="fill:var(--accent);font-weight:600">Pílulas ativadas</text>`;
+      s += `<polyline fill="none" stroke="var(--text)" stroke-width="2.5" stroke-linejoin="round" points="${d.map((v, i) => x(i) + ',' + y(v)).join(' ')}"/>`;
+      s += `<circle cx="${x(0)}" cy="${y(52)}" r="4" fill="var(--text)"/><text x="${x(0) + 8}" y="${y(52) - 8}" style="fill:var(--text);font-weight:600">52%</text><circle cx="${x(9)}" cy="${y(31)}" r="4" fill="var(--text)"/><text x="${x(9)}" y="${y(31) - 10}" text-anchor="end" style="fill:var(--text);font-weight:600">31%</text>`;
+      s += `<text x="42" y="214">semana 1</text><text x="500" y="214" text-anchor="end">semana 10</text>`;
+      $('#chart').innerHTML = s;
+    })();
+
+    $('#watch').onclick = () => toast('Abrindo a pílula de 4 minutos');
+    $('#sw').onclick = e => {
+      const on = e.target.getAttribute('aria-checked') !== 'true';
+      e.target.setAttribute('aria-checked', on);
+      $('#pillBox').style.display = on ? 'flex' : 'none';
+      $('#pillOff').style.display = on ? 'none' : 'block';
+      toast(on ? 'Pílulas ligadas' : 'Pílulas desligadas');
+    };
+    $('#gem').onclick = e => {
+      e.target.outerHTML = '<span class="st"><svg class="i"><use href="#i-check"/></svg>Conectado</span>';
+      toast('Gemini conectado');
+    };
+
+    renderAll();
+    renderROI();
+  </script>
+</body>
+</html>
